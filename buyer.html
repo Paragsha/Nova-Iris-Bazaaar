@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buyer - Nova Iris Bazaar</title>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+    header { background-color: #6200ea; color: white; padding: 1rem; text-align: center; }
+    .container { max-width: 800px; margin: 2rem auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .search-filter { display: flex; gap: 1rem; margin-bottom: 1rem; }
+    input, select { padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc; }
+    .listing { border-bottom: 1px solid #ddd; padding: 1rem 0; display: flex; gap: 1rem; }
+    .listing img { max-width: 100px; height: 100px; object-fit: cover; border-radius: 4px; }
+    .listing-content { flex: 1; }
+    .listing a { display: inline-block; margin-top: 0.5rem; color: #6200ea; text-decoration: none; }
+    #listingsContainer { margin-top: 1rem; }
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+  <script src="firebase.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Buyer Page - Nova Iris Bazaar</h1>
+  </header>
+  <div class="container">
+    <div class="search-filter">
+      <input type="text" id="searchInput" placeholder="Search items...">
+      <select id="categoryFilter">
+        <option value="">All Categories</option>
+        <option>Electronics</option>
+        <option>Furniture</option>
+        <option>Books</option>
+        <option>Kids Item</option>
+        <option>Bikes</option>
+        <option>Cars</option>
+      </select>
+    </div>
+    <div id="listingsContainer">
+    </div>
+  </div>
+
+  <script>
+    function displayItems(items) {
+      const container = document.getElementById('listingsContainer');
+      container.innerHTML = '';
+
+      if (items.length === 0) {
+        container.innerHTML = '<p>No items found.</p>';
+        return;
+      }
+
+      items.forEach(item => {
+        const listing = document.createElement('div');
+        listing.className = 'listing';
+        listing.innerHTML = `
+          <img src="${item.imageUrl}" alt="${item.itemTitle}">
+          <div class="listing-content">
+            <strong>${item.itemTitle}</strong><br>
+            ${item.itemDescription}<br>
+            <strong>Rs. ${item.itemPrice}</strong><br>
+            <em>${item.itemCategory}</em><br>
+            <a href="mailto:${item.sellerEmail}">Contact Seller (${item.sellerName})</a>
+          </div>
+        `;
+        container.appendChild(listing);
+      });
+    }
+
+    db.collection('items').orderBy('createdAt', 'desc').get()
+      .then(querySnapshot => {
+        const items = [];
+        querySnapshot.forEach(doc => {
+          items.push(doc.data());
+        });
+        displayItems(items);
+      });
+
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+      const searchTerm = e.target.value.toLowerCase();
+      const category = document.getElementById('categoryFilter').value;
+      filterItems(searchTerm, category);
+    });
+
+    document.getElementById('categoryFilter').addEventListener('change', function(e) {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const category = e.target.value;
+      filterItems(searchTerm, category);
+    });
+
+    function filterItems(searchTerm, category) {
+      let query = db.collection('items').orderBy('createdAt', 'desc');
+
+      query.get().then(querySnapshot => {
+        let items = [];
+        querySnapshot.forEach(doc => {
+          const item = doc.data();
+          const matchesSearch = item.itemTitle.toLowerCase().includes(searchTerm) ||
+                                item.itemDescription.toLowerCase().includes(searchTerm);
+          const matchesCategory = !category || item.itemCategory === category;
+
+          if (matchesSearch && matchesCategory) {
+            items.push(item);
+          }
+        });
+        displayItems(items);
+      });
+    }
+  </script>
+</body>
+</html>
