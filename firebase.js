@@ -1,3 +1,4 @@
+// firebase.js
 const firebaseConfig = {
   apiKey: "AIzaSyCly_nrNKyo-JhcC_xl4fpxGX9s12O8GFI",
   authDomain: "novairisbazaar.firebaseapp.com",
@@ -10,6 +11,9 @@ const firebaseConfig = {
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 
-// Export Firestore and Storage
+// Export db and storage
 const db = firebase.firestore();
 const storage = firebase.storage();
+
+window.db = db;
+window.storage = storage;
